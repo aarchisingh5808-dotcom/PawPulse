@@ -485,17 +485,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
   const screens = {
     'screen-home': document.getElementById('screen-home'),
+    'screen-location': document.getElementById('screen-location'),
+    'screen-vet': document.getElementById('screen-vet'),
+    'screen-rescue': document.getElementById('screen-rescue'),
     'screen-profile': document.getElementById('screen-profile'),
     'screen-records': document.getElementById('screen-records')
   };
 
   const navButtons = {
     'screen-home': document.getElementById('nav-btn-home'),
-    'screen-profile': document.getElementById('nav-btn-profile'),
-    'screen-records': document.getElementById('nav-btn-records')
+    'screen-location': document.getElementById('nav-btn-location'),
+    'screen-vet': document.getElementById('nav-btn-vet'),
+    'screen-rescue': document.getElementById('nav-btn-rescue')
   };
 
   const btnPetCard = document.getElementById('home-pet-card');
+  const btnBackFromProfile = document.getElementById('btn-back-from-profile');
   const btnGotoRecords = document.getElementById('btn-goto-records');
 
   function navigateTo(targetScreenId) {
@@ -537,6 +542,10 @@ document.addEventListener('DOMContentLoaded', () => {
         navigateTo('screen-profile');
       }
     });
+  }
+
+  if (btnBackFromProfile) {
+    btnBackFromProfile.addEventListener('click', () => navigateTo('screen-home'));
   }
 
   if (btnGotoRecords) {
@@ -1076,9 +1085,261 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // 11. Global Modal Overlay Dismissal (Backdrop Click & ESC Key)
+  // 11. Stage 1 New Modals & Platform Controllers
   // ==========================================================================
-  [modalRemDetail, modalRemForm, modalCareForm, modalProfileForm].forEach(modal => {
+  // Smart Collar Device Manager Modal
+  const modalDeviceManager = document.getElementById('modal-device-manager');
+  const btnOpenCollarModal = document.getElementById('btn-open-collar-modal');
+  const btnCloseDeviceModal = document.getElementById('btn-close-device-modal');
+  const btnCloseCollarDialog = document.getElementById('btn-close-collar-dialog');
+  const btnToggleCollarConn = document.getElementById('btn-toggle-collar-connection');
+  const collarStatusDot = document.getElementById('collar-status-dot');
+  const collarStatusText = document.getElementById('collar-status-text');
+  const collarBatteryPill = document.getElementById('collar-battery-pill');
+  const collarSyncText = document.getElementById('collar-sync-text');
+  const devModalState = document.getElementById('dev-modal-state');
+  const btnCollarConnText = document.getElementById('btn-collar-conn-text');
+
+  let isCollarSimConnected = false;
+
+  function updateCollarHUD(connected) {
+    isCollarSimConnected = connected;
+    if (connected) {
+      if (collarStatusDot) collarStatusDot.className = 'hud-status-dot connected';
+      if (collarStatusText) collarStatusText.textContent = 'Demo Collar: Connected';
+      if (collarBatteryPill) collarBatteryPill.textContent = '🔋 88% (Demo)';
+      if (collarSyncText) collarSyncText.textContent = 'Sync: Active Stream';
+      if (devModalState) devModalState.textContent = 'Status: Connected (Simulation Mode)';
+      if (btnCollarConnText) btnCollarConnText.textContent = 'Disconnect Demo Collar';
+    } else {
+      if (collarStatusDot) collarStatusDot.className = 'hud-status-dot disconnected';
+      if (collarStatusText) collarStatusText.textContent = 'Demo Collar: Disconnected';
+      if (collarBatteryPill) collarBatteryPill.textContent = '🔋 --% (Demo)';
+      if (collarSyncText) collarSyncText.textContent = 'Sync: Standby';
+      if (devModalState) devModalState.textContent = 'Status: Disconnected (Demo Mode)';
+      if (btnCollarConnText) btnCollarConnText.textContent = 'Connect Demo Collar';
+    }
+  }
+
+  if (btnOpenCollarModal) {
+    btnOpenCollarModal.addEventListener('click', () => {
+      if (modalDeviceManager) modalDeviceManager.hidden = false;
+    });
+  }
+
+  function closeCollarModal() {
+    if (modalDeviceManager) modalDeviceManager.hidden = true;
+  }
+  if (btnCloseDeviceModal) btnCloseDeviceModal.addEventListener('click', closeCollarModal);
+  if (btnCloseCollarDialog) btnCloseCollarDialog.addEventListener('click', closeCollarModal);
+
+  if (btnToggleCollarConn) {
+    btnToggleCollarConn.addEventListener('click', () => {
+      updateCollarHUD(!isCollarSimConnected);
+    });
+  }
+
+  // Find My Pet – Lost Pet Mode Toggle
+  const btnToggleLostMode = document.getElementById('btn-toggle-lost-mode');
+  const btnLostModeText = document.getElementById('btn-lost-mode-text');
+  let isLostModeActive = false;
+
+  if (btnToggleLostMode) {
+    btnToggleLostMode.addEventListener('click', () => {
+      isLostModeActive = !isLostModeActive;
+      if (isLostModeActive) {
+        btnLostModeText.textContent = '🚨 Deactivate Lost Pet Mode (Demo)';
+        btnToggleLostMode.style.backgroundColor = '#9F1239';
+        alert('Simulated Lost Pet Mode Activated: Collar high-frequency beacon simulation initiated. Emergency contact broadcast simulated.');
+      } else {
+        btnLostModeText.textContent = '🚨 Activate Lost Pet Mode (Demo)';
+        btnToggleLostMode.style.backgroundColor = '';
+        alert('Simulated Lost Pet Mode Deactivated.');
+      }
+    });
+  }
+
+  // Emergency Vet – Video Consultation Stub Modal
+  const modalVetConsult = document.getElementById('modal-vet-consult');
+  const btnOpenVideoConsult = document.getElementById('btn-open-video-consult');
+  const btnCloseVetConsult = document.getElementById('btn-close-vet-consult');
+  const btnEndVideoConsult = document.getElementById('btn-end-video-consult');
+
+  if (btnOpenVideoConsult) {
+    btnOpenVideoConsult.addEventListener('click', () => {
+      if (modalVetConsult) modalVetConsult.hidden = false;
+    });
+  }
+  function closeVetConsult() {
+    if (modalVetConsult) modalVetConsult.hidden = true;
+  }
+  if (btnCloseVetConsult) btnCloseVetConsult.addEventListener('click', closeVetConsult);
+  if (btnEndVideoConsult) btnEndVideoConsult.addEventListener('click', closeVetConsult);
+
+  // Animal Rescue – Incident Report Modal & Temporary Photo Preview
+  const modalRescueReport = document.getElementById('modal-rescue-report');
+  const btnOpenRescueModal = document.getElementById('btn-open-rescue-modal');
+  const btnCloseRescueModal = document.getElementById('btn-close-rescue-modal');
+  const btnCancelRescue = document.getElementById('btn-cancel-rescue');
+  const formRescueReport = document.getElementById('form-rescue-report');
+  const rescuePhotoInput = document.getElementById('rescue-photo-input');
+  const rescuePhotoPreviewBox = document.getElementById('rescue-photo-preview-box');
+  const rescuePhotoPreview = document.getElementById('rescue-photo-preview');
+  const btnRemovePhoto = document.getElementById('btn-remove-photo');
+  const btnCaptureLocation = document.getElementById('btn-capture-location');
+  const rescueLocationInput = document.getElementById('rescue-location-input');
+  const rescueGpsHint = document.getElementById('rescue-gps-hint');
+  const rescueReportsList = document.getElementById('rescue-reports-list');
+
+  let temporaryPhotoObjectUrl = null;
+  let activeRescueReports = [
+    {
+      id: 'rescue-demo-1',
+      type: 'Injured Animal',
+      animalDesc: 'Small terrier mix, limping near curb',
+      location: 'Oakridge Park Gate 3 (Demo Area)',
+      status: 'triaged', // 'submitted' | 'triaged' | 'dispatched' | 'resolved'
+      timestamp: 'Today, 2:15 PM (Demo)'
+    }
+  ];
+
+  function renderRescueReports() {
+    if (!rescueReportsList) return;
+    if (activeRescueReports.length === 0) {
+      rescueReportsList.innerHTML = `
+        <div class="card empty-state-card" style="padding: 16px;">
+          <p style="font-size: 0.8rem; color: var(--color-text-muted);">No active rescue incident reports logged. Use the button above to report an animal in distress.</p>
+        </div>
+      `;
+      return;
+    }
+
+    rescueReportsList.innerHTML = activeRescueReports.map(rep => {
+      const steps = ['submitted', 'triaged', 'dispatched', 'resolved'];
+      const currentIndex = steps.indexOf(rep.status);
+
+      return `
+        <article class="card" style="margin-bottom: 12px; padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span class="badge-source badge-demo">${rep.type}</span>
+            <span style="font-size: 0.7rem; color: var(--color-text-muted);">${rep.timestamp}</span>
+          </div>
+          <h4 style="font-size: 0.9rem; font-weight: 800; color: var(--color-text-main); margin-bottom: 2px;">${rep.animalDesc}</h4>
+          <p style="font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 10px;">📍 ${rep.location}</p>
+          
+          <div style="display: flex; justify-content: space-between; gap: 4px; background: var(--color-surface-soft); padding: 8px 10px; border-radius: var(--radius-sm); font-size: 0.68rem; font-weight: 700;">
+            <span style="color: ${currentIndex >= 0 ? '#047857' : '#94A3B8'};">1. Submitted ✓</span>
+            <span style="color: ${currentIndex >= 1 ? '#047857' : '#94A3B8'};">2. Triaged ${currentIndex >= 1 ? '✓' : '○'}</span>
+            <span style="color: ${currentIndex >= 2 ? '#047857' : '#94A3B8'};">3. Dispatched ${currentIndex >= 2 ? '✓' : '○'}</span>
+            <span style="color: ${currentIndex >= 3 ? '#047857' : '#94A3B8'};">4. Resolved ${currentIndex >= 3 ? '✓' : '○'}</span>
+          </div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  if (btnOpenRescueModal) {
+    btnOpenRescueModal.addEventListener('click', () => {
+      if (modalRescueReport) modalRescueReport.hidden = false;
+    });
+  }
+
+  function closeRescueModal() {
+    if (modalRescueReport) modalRescueReport.hidden = true;
+    if (formRescueReport) formRescueReport.reset();
+    if (temporaryPhotoObjectUrl) {
+      URL.revokeObjectURL(temporaryPhotoObjectUrl);
+      temporaryPhotoObjectUrl = null;
+    }
+    if (rescuePhotoPreviewBox) rescuePhotoPreviewBox.hidden = true;
+  }
+
+  if (btnCloseRescueModal) btnCloseRescueModal.addEventListener('click', closeRescueModal);
+  if (btnCancelRescue) btnCancelRescue.addEventListener('click', closeRescueModal);
+
+  // Temporary Photo Preview Handler (Constraint 7: Object URL only, zero localStorage base64 bloat)
+  if (rescuePhotoInput) {
+    rescuePhotoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (temporaryPhotoObjectUrl) URL.revokeObjectURL(temporaryPhotoObjectUrl);
+        temporaryPhotoObjectUrl = URL.createObjectURL(file);
+        if (rescuePhotoPreview) rescuePhotoPreview.src = temporaryPhotoObjectUrl;
+        if (rescuePhotoPreviewBox) rescuePhotoPreviewBox.hidden = false;
+      }
+    });
+  }
+
+  if (btnRemovePhoto) {
+    btnRemovePhoto.addEventListener('click', () => {
+      if (temporaryPhotoObjectUrl) URL.revokeObjectURL(temporaryPhotoObjectUrl);
+      temporaryPhotoObjectUrl = null;
+      if (rescuePhotoInput) rescuePhotoInput.value = '';
+      if (rescuePhotoPreviewBox) rescuePhotoPreviewBox.hidden = true;
+    });
+  }
+
+  // Location Capture Handler
+  if (btnCaptureLocation) {
+    btnCaptureLocation.addEventListener('click', () => {
+      if (navigator.geolocation) {
+        if (rescueGpsHint) rescueGpsHint.textContent = 'Requesting device coordinates...';
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const coords = `${pos.coords.latitude.toFixed(4)}° N, ${pos.coords.longitude.toFixed(4)}° W (Device GPS)`;
+            if (rescueLocationInput) rescueLocationInput.value = coords;
+            if (rescueGpsHint) rescueGpsHint.textContent = 'Captured coordinates via device Geolocation.';
+          },
+          (err) => {
+            if (rescueLocationInput) rescueLocationInput.value = '37.7749° N, 122.4194° W (Demo Coordinates)';
+            if (rescueGpsHint) rescueGpsHint.textContent = 'Location set to demo coordinates (Permission unavailable).';
+          },
+          { timeout: 8000 }
+        );
+      } else {
+        if (rescueLocationInput) rescueLocationInput.value = '37.7749° N, 122.4194° W (Demo Coordinates)';
+      }
+    });
+  }
+
+  if (formRescueReport) {
+    formRescueReport.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const typeSelect = document.getElementById('rescue-incident-type');
+      const descInput = document.getElementById('rescue-animal-desc');
+      const locInput = document.getElementById('rescue-location-input');
+
+      const newReport = {
+        id: 'rescue-' + Date.now(),
+        type: typeSelect ? typeSelect.options[typeSelect.selectedIndex].text : 'Animal Incident',
+        animalDesc: descInput ? descInput.value.trim() : 'Unspecified animal',
+        location: locInput ? locInput.value.trim() : 'Unknown location',
+        status: 'submitted',
+        timestamp: 'Just now (Demo Report)'
+      };
+
+      activeRescueReports.unshift(newReport);
+      renderRescueReports();
+      closeRescueModal();
+      alert('Rescue incident report submitted in demonstration mode. Status tracking updated below.');
+    });
+  }
+
+  // Initial render of rescue reports
+  renderRescueReports();
+
+  // ==========================================================================
+  // 12. Global Modal Overlay Dismissal (Backdrop Click & ESC Key)
+  // ==========================================================================
+  [
+    modalRemDetail, 
+    modalRemForm, 
+    modalCareForm, 
+    modalProfileForm, 
+    modalDeviceManager, 
+    modalRescueReport, 
+    modalVetConsult
+  ].forEach(modal => {
     if (!modal) return;
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
@@ -1089,15 +1350,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (modalRemDetail && !modalRemDetail.hidden) modalRemDetail.hidden = true;
-      if (modalRemForm && !modalRemForm.hidden) modalRemForm.hidden = true;
-      if (modalCareForm && !modalCareForm.hidden) modalCareForm.hidden = true;
-      if (modalProfileForm && !modalProfileForm.hidden) modalProfileForm.hidden = true;
+      [
+        modalRemDetail, 
+        modalRemForm, 
+        modalCareForm, 
+        modalProfileForm, 
+        modalDeviceManager, 
+        modalRescueReport, 
+        modalVetConsult
+      ].forEach(m => {
+        if (m && !m.hidden) m.hidden = true;
+      });
     }
   });
 
   // ==========================================================================
-  // 12. Pet Switcher Function (Cat & Dog Support)
+  // 13. Pet Switcher Function (Cat & Dog Support)
   // ==========================================================================
   const btnCat = document.getElementById('btn-pet-cat');
   const btnDog = document.getElementById('btn-pet-dog');
@@ -1187,6 +1455,22 @@ document.addEventListener('DOMContentLoaded', () => {
         </article>
       `).join('');
     }
+
+    // Update Stage 1 Find My Pet Map Marker
+    const mapPetAvatar = document.getElementById('map-pet-avatar');
+    const mapPetName = document.getElementById('map-pet-name');
+    if (mapPetAvatar) mapPetAvatar.textContent = data.avatar;
+    if (mapPetName) mapPetName.textContent = data.name;
+
+    // Update Stage 1 Emergency Vet Medical Passport
+    const passAvatar = document.getElementById('pass-avatar');
+    const passName = document.getElementById('pass-name');
+    const passBreed = document.getElementById('pass-breed');
+    const passVitals = document.getElementById('pass-vitals');
+    if (passAvatar) passAvatar.textContent = data.avatar;
+    if (passName) passName.textContent = data.name;
+    if (passBreed) passBreed.textContent = `${data.profileBreed || data.breed} • ${data.age} • ${data.weight}`;
+    if (passVitals) passVitals.textContent = `${data.metrics.heartRate} bpm (Simulated Value)`;
   }
 
   if (btnCat) {
