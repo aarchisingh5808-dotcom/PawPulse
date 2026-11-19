@@ -171,12 +171,12 @@
             <div class="detail-box">
               <span class="detail-key">Age</span>
               <span class="detail-val" id="profile-age">3 Years</span>
-              <span class="detail-sub">Sample value</span>
+              <span class="detail-sub">Profile value</span>
             </div>
             <div class="detail-box">
               <span class="detail-key">Recorded Weight</span>
               <span class="detail-val" id="profile-weight">4.2 kg</span>
-              <span class="detail-sub">Simulated</span>
+              <span class="detail-sub">Recorded</span>
             </div>
             <div class="detail-box">
               <span class="detail-key">Species</span>
@@ -186,8 +186,16 @@
             <div class="detail-box">
               <span class="detail-key">Coat / Color</span>
               <span class="detail-val" id="profile-color">Silver Tabby</span>
-              <span class="detail-sub">Sample detail</span>
+              <span class="detail-sub">Profile detail</span>
             </div>
+          </div>
+
+          <!-- Edit Profile Trigger Button (Requirement 2) -->
+          <div class="profile-actions-row">
+            <button type="button" class="btn-pill-action" id="btn-open-edit-profile" aria-label="Edit pet profile details">
+              <span class="pill-icon">✏️</span>
+              <span>Edit Profile Details</span>
+            </button>
           </div>
         </article>
 
@@ -212,6 +220,13 @@
 
         <div class="medical-history-list" id="profile-history-list">
           <!-- Rendered dynamically by app.js -->
+        </div>
+
+        <!-- Reset Demo Data Control -->
+        <div class="reset-block">
+          <button type="button" class="btn-reset-demo" id="btn-reset-data" aria-label="Reset all saved changes to default demo data">
+            <span>↺ Reset to Initial Demo Data</span>
+          </button>
         </div>
       </section>
 
@@ -436,7 +451,7 @@
 
           <div class="form-group">
             <label for="care-form-title" class="form-label">Entry Title *</label>
-            <input type="text" id="care-form-title" class="form-input" placeholder="e.g. Daily Kibble Portion or Booster Record" required>
+            <input type="text" id="care-form-title" class="form-input" placeholder="e.g. Daily Kibble Portion or Hydration Log" required>
           </div>
 
           <div class="form-group">
@@ -447,6 +462,51 @@
           <div class="modal-footer" style="padding: 0; margin-top: 8px;">
             <button type="submit" class="btn btn-primary">Save Care Information</button>
             <button type="button" class="btn btn-tertiary" id="btn-cancel-care-form">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL 4: EDIT PET PROFILE FORM (Requirement 2) -->
+    <!-- ============================================== -->
+    <div class="modal-overlay" id="modal-profile-form" role="dialog" aria-modal="true" aria-labelledby="modal-prof-form-title" hidden>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title-sm" id="modal-prof-form-title">Edit Pet Profile</h3>
+          <button type="button" class="btn-close-modal" id="btn-close-prof-form" aria-label="Close dialog">✕</button>
+        </div>
+
+        <form id="form-profile" class="modal-form">
+          <div class="form-group">
+            <label for="prof-form-name" class="form-label">Pet Name *</label>
+            <input type="text" id="prof-form-name" class="form-input" placeholder="e.g. Luna" required>
+          </div>
+
+          <div class="form-group">
+            <label for="prof-form-breed" class="form-label">Breed / Subtitle *</label>
+            <input type="text" id="prof-form-breed" class="form-input" placeholder="e.g. Domestic Shorthair" required>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="prof-form-age" class="form-label">Age *</label>
+              <input type="text" id="prof-form-age" class="form-input" placeholder="e.g. 3 Years" required>
+            </div>
+            <div class="form-group">
+              <label for="prof-form-weight" class="form-label">Recorded Weight *</label>
+              <input type="text" id="prof-form-weight" class="form-input" placeholder="e.g. 4.2 kg" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="prof-form-color" class="form-label">Coat / Color</label>
+            <input type="text" id="prof-form-color" class="form-input" placeholder="e.g. Silver Tabby">
+          </div>
+
+          <div class="modal-footer" style="padding: 0; margin-top: 8px;">
+            <button type="submit" class="btn btn-primary">Save Profile Changes</button>
+            <button type="button" class="btn btn-tertiary" id="btn-cancel-prof-form">Cancel</button>
           </div>
         </form>
       </div>

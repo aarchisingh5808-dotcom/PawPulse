@@ -1,75 +1,16 @@
 /**
- * PawPulse – Pet Health Monitoring Prototype (Version 0 Enhanced)
- * Interactive Reminders, Dynamic Pet Care Sections, and Data Provenance.
+ * PawPulse – Pet Health Monitoring Prototype (Version 0 Enhanced with LocalStorage Persistence)
+ * Handles screen navigation, pet switching, interactive reminders, care accordions,
+ * pet profile editing, and robust localStorage persistence.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
-  // 1. Navigation & Screen Switching
+  // 1. Storage Keys & Default Initial Demo Data
   // ==========================================================================
-  const screens = {
-    'screen-home': document.getElementById('screen-home'),
-    'screen-profile': document.getElementById('screen-profile'),
-    'screen-records': document.getElementById('screen-records')
-  };
+  const STORAGE_KEY = 'pawpulse_state_v1';
+  const ACTIVE_PET_KEY = 'pawpulse_active_pet';
 
-  const navButtons = {
-    'screen-home': document.getElementById('nav-btn-home'),
-    'screen-profile': document.getElementById('nav-btn-profile'),
-    'screen-records': document.getElementById('nav-btn-records')
-  };
-
-  const btnPetCard = document.getElementById('home-pet-card');
-  const btnGotoRecords = document.getElementById('btn-goto-records');
-
-  function navigateTo(targetScreenId) {
-    if (!screens[targetScreenId]) return;
-
-    Object.keys(screens).forEach(id => {
-      screens[id].classList.remove('active');
-    });
-
-    Object.keys(navButtons).forEach(id => {
-      navButtons[id].classList.remove('active');
-      navButtons[id].setAttribute('aria-selected', 'false');
-    });
-
-    screens[targetScreenId].classList.add('active');
-    if (navButtons[targetScreenId]) {
-      navButtons[targetScreenId].classList.add('active');
-      navButtons[targetScreenId].setAttribute('aria-selected', 'true');
-    }
-
-    const mainViewport = document.getElementById('main-content');
-    if (mainViewport) {
-      mainViewport.scrollTop = 0;
-    }
-  }
-
-  Object.keys(navButtons).forEach(screenId => {
-    const btn = navButtons[screenId];
-    if (btn) {
-      btn.addEventListener('click', () => navigateTo(screenId));
-    }
-  });
-
-  if (btnPetCard) {
-    btnPetCard.addEventListener('click', () => navigateTo('screen-profile'));
-    btnPetCard.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        navigateTo('screen-profile');
-      }
-    });
-  }
-
-  if (btnGotoRecords) {
-    btnGotoRecords.addEventListener('click', () => navigateTo('screen-records'));
-  }
-
-  // ==========================================================================
-  // 2. Pet Profiles & Interactive In-Memory State
-  // ==========================================================================
   const categoryIcons = {
     vet: { icon: '🩺', badgeClass: 'badge-vet', label: 'Vet Visit' },
     grooming: { icon: '🛁', badgeClass: 'badge-grooming', label: 'Grooming' },
@@ -79,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     general: { icon: '🐾', badgeClass: 'badge-general', label: 'General' }
   };
 
-  const petData = {
+  const DEFAULT_INITIAL_DATA = {
     cat: {
       avatar: '🐱',
       name: 'Luna',
@@ -102,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
         activity: '45 mins',
         temp: '38.4 °C'
       },
-      // Routine Care Reminders (Interactive)
       reminders: [
         {
           id: 'rem-cat-1',
@@ -110,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
           date: 'Next Month (Demo Reminder)',
           category: 'vet',
           description: 'Comprehensive annual wellness inspection including coat check, dental overview, and routine weight check.',
-          status: 'pending', // 'pending' | 'completed'
+          status: 'pending',
           isUserCreated: false
         },
         {
@@ -132,7 +72,6 @@ document.addEventListener('DOMContentLoaded', () => {
           isUserCreated: false
         }
       ],
-      // Pet Care Information: 6 Organized Sections (Interactive)
       careSections: {
         feeding: {
           title: 'Feeding Schedules',
@@ -446,7 +385,89 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  // ==========================================================================
+  // 2. Safe Persistence: Load & Save with Validation
+  // ==========================================================================
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        // First-time user: Return deep clone of default sample data
+        return deepClone(DEFAULT_INITIAL_DATA);
+      }
+
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') {
+        console.warn('PawPulse: Invalid localStorage payload. Reverting safely to default.');
+        return deepClone(DEFAULT_INITIAL_DATA);
+      }
+
+      // Safe merge: Preserve user's saved data while ensuring structure integrity
+      const merged = deepClone(DEFAULT_INITIAL_DATA);
+
+      ['cat', 'dog'].forEach(petKey => {
+        if (parsed[petKey] && typeof parsed[petKey] === 'object') {
+          const userPet = parsed[petKey];
+
+          // 1. Profile information
+          if (typeof userPet.name === 'string' && userPet.name.trim()) merged[petKey].name = userPet.name;
+          if (typeof userPet.profileBreed === 'string' && userPet.profileBreed.trim()) merged[petKey].profileBreed = userPet.profileBreed;
+          if (typeof userPet.breed === 'string' && userPet.breed.trim()) merged[petKey].breed = userPet.breed;
+          if (typeof userPet.age === 'string' && userPet.age.trim()) merged[petKey].age = userPet.age;
+          if (typeof userPet.weight === 'string' && userPet.weight.trim()) merged[petKey].weight = userPet.weight;
+          if (typeof userPet.color === 'string' && userPet.color.trim()) merged[petKey].color = userPet.color;
+
+          // 2. Reminders: Load the exact saved array (so deleted items stay deleted!)
+          if (Array.isArray(userPet.reminders)) {
+            merged[petKey].reminders = userPet.reminders;
+          }
+
+          // 3. Care Sections (Feeding, Grooming, Vaccinations, Vet Visits, Medications, Care Notes)
+          if (userPet.careSections && typeof userPet.careSections === 'object') {
+            Object.keys(merged[petKey].careSections).forEach(secKey => {
+              if (userPet.careSections[secKey] && Array.isArray(userPet.careSections[secKey].items)) {
+                // Load exact array of items, preserving additions, edits, and deletions
+                merged[petKey].careSections[secKey].items = userPet.careSections[secKey].items;
+              }
+            });
+          }
+        }
+      });
+
+      return merged;
+    } catch (err) {
+      console.error('PawPulse: Error loading saved state from localStorage:', err);
+      return deepClone(DEFAULT_INITIAL_DATA);
+    }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(petData));
+      localStorage.setItem(ACTIVE_PET_KEY, currentPet);
+    } catch (err) {
+      console.error('PawPulse: Unable to save state to localStorage:', err);
+    }
+  }
+
+  // Initialize application state
+  let petData = loadState();
+
+  // Restore active pet safely
   let currentPet = 'cat';
+  try {
+    const savedPet = localStorage.getItem(ACTIVE_PET_KEY);
+    if (savedPet === 'cat' || savedPet === 'dog') {
+      currentPet = savedPet;
+    }
+  } catch (e) {
+    currentPet = 'cat';
+  }
+
   let activeReminderId = null;
 
   // Track accordion open state (default feeding & grooming open)
@@ -459,6 +480,69 @@ document.addEventListener('DOMContentLoaded', () => {
     careNotes: false
   };
 
+  // ==========================================================================
+  // 3. Navigation & Screen Switching
+  // ==========================================================================
+  const screens = {
+    'screen-home': document.getElementById('screen-home'),
+    'screen-profile': document.getElementById('screen-profile'),
+    'screen-records': document.getElementById('screen-records')
+  };
+
+  const navButtons = {
+    'screen-home': document.getElementById('nav-btn-home'),
+    'screen-profile': document.getElementById('nav-btn-profile'),
+    'screen-records': document.getElementById('nav-btn-records')
+  };
+
+  const btnPetCard = document.getElementById('home-pet-card');
+  const btnGotoRecords = document.getElementById('btn-goto-records');
+
+  function navigateTo(targetScreenId) {
+    if (!screens[targetScreenId]) return;
+
+    Object.keys(screens).forEach(id => {
+      screens[id].classList.remove('active');
+    });
+
+    Object.keys(navButtons).forEach(id => {
+      navButtons[id].classList.remove('active');
+      navButtons[id].setAttribute('aria-selected', 'false');
+    });
+
+    screens[targetScreenId].classList.add('active');
+    if (navButtons[targetScreenId]) {
+      navButtons[targetScreenId].classList.add('active');
+      navButtons[targetScreenId].setAttribute('aria-selected', 'true');
+    }
+
+    const mainViewport = document.getElementById('main-content');
+    if (mainViewport) {
+      mainViewport.scrollTop = 0;
+    }
+  }
+
+  Object.keys(navButtons).forEach(screenId => {
+    const btn = navButtons[screenId];
+    if (btn) {
+      btn.addEventListener('click', () => navigateTo(screenId));
+    }
+  });
+
+  if (btnPetCard) {
+    btnPetCard.addEventListener('click', () => navigateTo('screen-profile'));
+    btnPetCard.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        navigateTo('screen-profile');
+      }
+    });
+  }
+
+  if (btnGotoRecords) {
+    btnGotoRecords.addEventListener('click', () => navigateTo('screen-records'));
+  }
+
   // Helper for source badge HTML (Requirement 4)
   function renderSourceBadge(isUserCreated) {
     if (isUserCreated) {
@@ -468,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // 3. Render Routine Care Reminders (Requirement 1 & 2)
+  // 4. Render Routine Care Reminders (Requirement 1)
   // ==========================================================================
   const remindersContainer = document.getElementById('reminders-container');
 
@@ -479,7 +563,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!reminders || reminders.length === 0) {
       remindersContainer.innerHTML = `
         <div class="card" style="text-align: center; color: var(--color-text-muted); padding: 24px;">
-          <p>No reminders found. Tap <strong>+ Add Reminder</strong> above to create one.</p>
+          <p>No reminders logged. Tap <strong>+ Add Reminder</strong> above to create one.</p>
         </div>
       `;
       return;
@@ -535,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // 4. Reminder Detail Modal (Requirement 1)
+  // 5. Reminder Detail Modal (Status toggle, Edit, Delete)
   // ==========================================================================
   const modalRemDetail = document.getElementById('modal-reminder-detail');
   const btnCloseRemDetail = document.getElementById('btn-close-rem-detail');
@@ -563,7 +647,6 @@ document.addEventListener('DOMContentLoaded', () => {
     modalRemDate.textContent = reminder.date;
     modalRemDesc.textContent = reminder.description || 'No additional instructions provided.';
 
-    // Source Badge
     if (reminder.isUserCreated) {
       modalRemSourceBadge.className = 'badge-source badge-user';
       modalRemSourceBadge.innerHTML = '✏️ User Added';
@@ -572,7 +655,6 @@ document.addEventListener('DOMContentLoaded', () => {
       modalRemSourceBadge.innerHTML = '🧪 Sample Demo';
     }
 
-    // Status Pill
     if (isCompleted) {
       modalRemStatusPill.className = 'status-pill status-completed';
       modalRemStatusPill.textContent = '✓ Completed';
@@ -604,8 +686,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!reminder) return;
 
       reminder.status = reminder.status === 'completed' ? 'pending' : 'completed';
+      saveState(); // Persist completion toggle
       renderReminders();
-      openReminderDetail(activeReminderId); // Refresh modal view
+      openReminderDetail(activeReminderId);
     });
   }
 
@@ -614,6 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!activeReminderId) return;
       if (confirm('Delete this reminder?')) {
         petData[currentPet].reminders = petData[currentPet].reminders.filter(r => r.id !== activeReminderId);
+        saveState(); // Persist deletion (ensures it does not reappear on refresh)
         renderReminders();
         closeReminderDetail();
       }
@@ -621,7 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // 5. Add / Edit Reminder Form Modal (Requirement 2)
+  // 6. Add / Edit Reminder Form Modal
   // ==========================================================================
   const modalRemForm = document.getElementById('modal-reminder-form');
   const btnOpenAddReminder = document.getElementById('btn-open-add-reminder');
@@ -699,10 +783,9 @@ document.addEventListener('DOMContentLoaded', () => {
           reminder.date = date;
           reminder.category = category;
           reminder.description = desc;
-          // Note: If user edits a sample demo reminder, we can keep its provenance or note user edit
         }
       } else {
-        // Create new (User Created)
+        // Create new
         const newReminder = {
           id: 'rem-user-' + Date.now(),
           title: title,
@@ -710,18 +793,19 @@ document.addEventListener('DOMContentLoaded', () => {
           category: category,
           description: desc,
           status: 'pending',
-          isUserCreated: true // Marked as User Created (Requirement 4)
+          isUserCreated: true
         };
         petData[currentPet].reminders.unshift(newReminder);
       }
 
+      saveState(); // Persist addition / edit
       renderReminders();
       closeReminderForm();
     });
   }
 
   // ==========================================================================
-  // 6. Interactive Pet Care Information Sections (Requirement 3)
+  // 7. Interactive Pet Care Information Sections (Requirement 2 & 3)
   // ==========================================================================
   const careSectionsContainer = document.getElementById('care-sections-container');
 
@@ -783,7 +867,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Add Care Entry Button Handlers
+    // Add Care Entry
     careSectionsContainer.querySelectorAll('.btn-add-care-entry').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -792,7 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Edit Care Entry Handlers
+    // Edit Care Entry
     careSectionsContainer.querySelectorAll('.btn-edit-care').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -805,7 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Delete Care Entry Handlers
+    // Delete Care Entry
     careSectionsContainer.querySelectorAll('.btn-delete-care').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -814,6 +898,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm('Delete this care record?')) {
           petData[currentPet].careSections[sectionKey].items = 
             petData[currentPet].careSections[sectionKey].items.filter(i => i.id !== itemId);
+          saveState(); // Persist deletion (deleted items do not reappear on refresh)
           renderCareSections();
         }
       });
@@ -821,7 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // 7. Add / Edit Pet Care Modal Form
+  // 8. Add / Edit Pet Care Modal Form
   // ==========================================================================
   const modalCareForm = document.getElementById('modal-care-form');
   const btnCloseCareForm = document.getElementById('btn-close-care-form');
@@ -878,33 +963,122 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!section) return;
 
       if (itemId) {
-        // Edit existing
+        // Edit existing item
         const item = section.items.find(i => i.id === itemId);
         if (item) {
           item.title = title;
           item.details = details;
         }
       } else {
-        // Create new item (User Entered)
+        // Create new item
         const newItem = {
           id: 'care-user-' + Date.now(),
           title: title,
           details: details,
-          isUserCreated: true // Marked as User Entered (Requirement 4)
+          isUserCreated: true
         };
         section.items.push(newItem);
-        openAccordions[sectionKey] = true; // Ensure section is open to view new item
+        openAccordions[sectionKey] = true;
       }
 
+      saveState(); // Persist care entry addition / edit (feeding, grooming, hydration, etc.)
       renderCareSections();
       closeCareForm();
     });
   }
 
   // ==========================================================================
-  // 8. Global Modal Overlay Dismissal (Backdrop Click & ESC Key)
+  // 9. Edit Pet Profile Modal Form (Requirement 2)
   // ==========================================================================
-  [modalRemDetail, modalRemForm, modalCareForm].forEach(modal => {
+  const modalProfileForm = document.getElementById('modal-profile-form');
+  const btnOpenEditProfile = document.getElementById('btn-open-edit-profile');
+  const btnCloseProfForm = document.getElementById('btn-close-prof-form');
+  const btnCancelProfForm = document.getElementById('btn-cancel-prof-form');
+  const formProfile = document.getElementById('form-profile');
+  const profFormName = document.getElementById('prof-form-name');
+  const profFormBreed = document.getElementById('prof-form-breed');
+  const profFormAge = document.getElementById('prof-form-age');
+  const profFormWeight = document.getElementById('prof-form-weight');
+  const profFormColor = document.getElementById('prof-form-color');
+
+  function openProfileForm() {
+    if (!modalProfileForm) return;
+    const pet = petData[currentPet];
+
+    profFormName.value = pet.name || '';
+    profFormBreed.value = pet.profileBreed || pet.breed || '';
+    profFormAge.value = pet.age || '';
+    profFormWeight.value = pet.weight || '';
+    profFormColor.value = pet.color || '';
+
+    modalProfileForm.hidden = false;
+    profFormName.focus();
+  }
+
+  function closeProfileForm() {
+    if (modalProfileForm) modalProfileForm.hidden = true;
+    if (formProfile) formProfile.reset();
+  }
+
+  if (btnOpenEditProfile) {
+    btnOpenEditProfile.addEventListener('click', openProfileForm);
+  }
+  if (btnCloseProfForm) {
+    btnCloseProfForm.addEventListener('click', closeProfileForm);
+  }
+  if (btnCancelProfForm) {
+    btnCancelProfForm.addEventListener('click', closeProfileForm);
+  }
+
+  if (formProfile) {
+    formProfile.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = profFormName.value.trim();
+      const breed = profFormBreed.value.trim();
+      const age = profFormAge.value.trim();
+      const weight = profFormWeight.value.trim();
+      const color = profFormColor.value.trim();
+
+      if (!name || !breed || !age || !weight) return;
+
+      const pet = petData[currentPet];
+      pet.name = name;
+      pet.profileBreed = breed;
+      pet.breed = `${breed} • ${age} Old`;
+      pet.age = age;
+      pet.weight = weight;
+      if (color) pet.color = color;
+
+      saveState(); // Persist pet profile changes (Requirement 2)
+      renderPetData(currentPet);
+      closeProfileForm();
+    });
+  }
+
+  // ==========================================================================
+  // 10. Reset to Initial Demo Data Control (Requirement 6 & 8)
+  // ==========================================================================
+  const btnResetData = document.getElementById('btn-reset-data');
+  if (btnResetData) {
+    btnResetData.addEventListener('click', () => {
+      if (confirm('Reset PawPulse to the initial demo state? This will clear all custom additions and edits.')) {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(ACTIVE_PET_KEY);
+        } catch (e) {
+          console.warn('PawPulse: Error clearing localStorage', e);
+        }
+        petData = deepClone(DEFAULT_INITIAL_DATA);
+        currentPet = 'cat';
+        renderPetData('cat');
+      }
+    });
+  }
+
+  // ==========================================================================
+  // 11. Global Modal Overlay Dismissal (Backdrop Click & ESC Key)
+  // ==========================================================================
+  [modalRemDetail, modalRemForm, modalCareForm, modalProfileForm].forEach(modal => {
     if (!modal) return;
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
@@ -918,17 +1092,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (modalRemDetail && !modalRemDetail.hidden) modalRemDetail.hidden = true;
       if (modalRemForm && !modalRemForm.hidden) modalRemForm.hidden = true;
       if (modalCareForm && !modalCareForm.hidden) modalCareForm.hidden = true;
+      if (modalProfileForm && !modalProfileForm.hidden) modalProfileForm.hidden = true;
     }
   });
 
   // ==========================================================================
-  // 9. Pet Switcher Function (Cat & Dog Support)
+  // 12. Pet Switcher Function (Cat & Dog Support)
   // ==========================================================================
   const btnCat = document.getElementById('btn-pet-cat');
   const btnDog = document.getElementById('btn-pet-dog');
 
   function renderPetData(petKey) {
     currentPet = petKey;
+    saveState(); // Persist active pet selection
     const data = petData[petKey];
     if (!data) return;
 
@@ -1020,6 +1196,6 @@ document.addEventListener('DOMContentLoaded', () => {
     btnDog.addEventListener('click', () => renderPetData('dog'));
   }
 
-  // Initial render with default sample pet (Cat Luna)
-  renderPetData('cat');
+  // Initial render with loaded data
+  renderPetData(currentPet);
 });

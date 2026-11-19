@@ -806,6 +806,37 @@ html, body {
   color: var(--color-text-muted);
 }
 
+.profile-actions-row {
+  margin-top: 14px;
+  display: flex;
+  justify-content: center;
+}
+
+.reset-block {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.btn-reset-demo {
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-reset-demo:hover {
+  background: var(--color-surface);
+  color: #D32F2F;
+  border-color: #FFCDD2;
+}
+
 /* ==========================================================================
    Pet Care Information Section (6 Interactive Accordions - Requirement 3)
    ========================================================================== */
