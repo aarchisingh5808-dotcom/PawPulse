@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PawPulse – Pet Health Monitoring Prototype</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- App Shell Container -->
+  <div class="app-container">
+
+    <!-- Top Persistent Demo Disclaimer -->
+    <header class="disclaimer-banner" role="alert" aria-label="Disclaimer">
+      <div class="disclaimer-content">
+        <span class="disclaimer-icon">⚠️</span>
+        <div class="disclaimer-text">
+          <strong>Demonstration Prototype:</strong> All readings, records, and reminders are simulated sample data for testing purposes only. Not intended for medical evaluation or diagnosis.
+        </div>
+      </div>
+    </header>
+
+    <!-- Top Pet Switcher (Demonstrating Cat & Dog Support) -->
+    <div class="pet-selector-bar">
+      <span class="selector-label">Sample Pet:</span>
+      <div class="selector-pills">
+        <button type="button" class="pet-pill active" id="btn-pet-cat" data-pet="cat">
+          <span class="pet-pill-emoji">🐱</span>
+          <span class="pet-pill-text">Luna (Cat)</span>
+        </button>
+        <button type="button" class="pet-pill" id="btn-pet-dog" data-pet="dog">
+          <span class="pet-pill-emoji">🐶</span>
+          <span class="pet-pill-text">Buddy (Dog)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Screens Container -->
+    <main class="content-viewport" id="main-content">
+
+      <!-- ============================================== -->
+      <!-- SCREEN 1: HOME DASHBOARD                       -->
+      <!-- ============================================== -->
+      <section id="screen-home" class="screen-view active" aria-labelledby="home-title">
+        <div class="screen-header">
+          <div>
+            <span class="sub-greeting">Welcome to PawPulse 🐾</span>
+            <h1 id="home-title" class="screen-title">Pet Overview</h1>
+          </div>
+          <span class="proto-badge">Version 0 Prototype</span>
+        </div>
+
+        <!-- Pet Profile Card Summary -->
+        <article class="card pet-summary-card" id="home-pet-card" tabindex="0" role="button" aria-label="View Pet Profile">
+          <div class="pet-avatar-wrapper">
+            <div class="avatar-ring">
+              <span class="avatar-icon" id="home-pet-avatar">🐱</span>
+            </div>
+            <span class="avatar-status-dot" aria-hidden="true"></span>
+          </div>
+          <div class="pet-summary-info">
+            <div class="pet-title-row">
+              <h2 class="pet-name" id="home-pet-name">Luna</h2>
+              <span class="species-tag" id="home-pet-species">Cat</span>
+            </div>
+            <p class="pet-breed" id="home-pet-breed">Domestic Shorthair • 3 Years Old</p>
+            <div class="fictional-tag">Fictional Demo Profile</div>
+          </div>
+          <button type="button" class="icon-chevron" aria-label="Go to Pet Profile">→</button>
+        </article>
+
+        <!-- Sample Health Information (Neutral Simulated Readings) -->
+        <div class="section-heading-row">
+          <h2 class="section-title">Sample Wellness Readings</h2>
+          <span class="neutral-note">Simulated values</span>
+        </div>
+
+        <div class="metrics-grid">
+          <!-- Metric 1: Heart Rate -->
+          <div class="metric-card">
+            <div class="metric-top">
+              <span class="metric-icon metric-icon-heart">❤️</span>
+              <span class="metric-label">Heart Rate</span>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-number" id="metric-heart-rate">120</span>
+              <span class="metric-unit">bpm</span>
+            </div>
+            <div class="metric-sample-pill">Simulated Sample Value</div>
+          </div>
+
+          <!-- Metric 2: Activity -->
+          <div class="metric-card">
+            <div class="metric-top">
+              <span class="metric-icon metric-icon-activity">⚡</span>
+              <span class="metric-label">Daily Activity</span>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-number" id="metric-activity">45</span>
+              <span class="metric-unit">mins</span>
+            </div>
+            <div class="metric-sample-pill">Simulated Sample Value</div>
+          </div>
+
+          <!-- Metric 3: Sleep -->
+          <div class="metric-card">
+            <div class="metric-top">
+              <span class="metric-icon metric-icon-sleep">🌙</span>
+              <span class="metric-label">Rest & Sleep</span>
+            </div>
+            <div class="metric-value-row">
+              <span class="metric-number" id="metric-sleep">13.5</span>
+              <span class="metric-unit">hours</span>
+            </div>
+            <div class="metric-sample-pill">Simulated Sample Value</div>
+          </div>
+        </div>
+
+        <!-- Routine Care Reminders (Interactive with Detail & Add Reminder) -->
+        <div class="section-heading-row">
+          <div>
+            <h2 class="section-title">Routine Care Reminders</h2>
+            <span class="neutral-note">Tap any card to view details or edit</span>
+          </div>
+          <button type="button" class="btn-pill-action" id="btn-open-add-reminder" aria-label="Add new reminder">
+            <span class="pill-icon">+</span>
+            <span>Add Reminder</span>
+          </button>
+        </div>
+
+        <!-- Dynamic Reminders List Container -->
+        <div class="reminders-list" id="reminders-container">
+          <!-- Rendered dynamically by app.js -->
+        </div>
+
+        <!-- Direct Screen Link -->
+        <div class="action-block">
+          <button type="button" class="btn btn-secondary" id="btn-goto-records">
+            <span>View All Sample Health Records</span>
+            <span aria-hidden="true">📋</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- SCREEN 2: PET PROFILE                          -->
+      <!-- ============================================== -->
+      <section id="screen-profile" class="screen-view" aria-labelledby="profile-title">
+        <div class="screen-header">
+          <div>
+            <span class="sub-greeting">Pet Details</span>
+            <h1 id="profile-title" class="screen-title">Pet Profile</h1>
+          </div>
+          <span class="fictional-header-tag">Fictional Data Only</span>
+        </div>
+
+        <!-- Main Identity Card -->
+        <article class="card profile-hero-card">
+          <div class="profile-avatar-circle">
+            <span class="profile-avatar-emoji" id="profile-avatar">🐱</span>
+          </div>
+          <h2 class="profile-name" id="profile-name">Luna</h2>
+          <p class="profile-breed-tag" id="profile-breed">Domestic Shorthair Cat</p>
+          <div class="demo-id-badge" id="profile-demo-id">Pet ID: #DEMO-CAT-01 (Fictional Placeholder)</div>
+
+          <!-- Details Grid -->
+          <div class="profile-details-grid">
+            <div class="detail-box">
+              <span class="detail-key">Age</span>
+              <span class="detail-val" id="profile-age">3 Years</span>
+              <span class="detail-sub">Sample value</span>
+            </div>
+            <div class="detail-box">
+              <span class="detail-key">Recorded Weight</span>
+              <span class="detail-val" id="profile-weight">4.2 kg</span>
+              <span class="detail-sub">Simulated</span>
+            </div>
+            <div class="detail-box">
+              <span class="detail-key">Species</span>
+              <span class="detail-val" id="profile-species">Feline</span>
+              <span class="detail-sub">Fictional</span>
+            </div>
+            <div class="detail-box">
+              <span class="detail-key">Coat / Color</span>
+              <span class="detail-val" id="profile-color">Silver Tabby</span>
+              <span class="detail-sub">Sample detail</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Interactive Pet Care Information Section (6 Organized Categories) -->
+        <div class="section-heading-row">
+          <div>
+            <h2 class="section-title">Pet Care Information</h2>
+            <span class="neutral-note">Organized care schedules & records</span>
+          </div>
+        </div>
+
+        <!-- Care Information Accordion Container -->
+        <div class="care-accordion-group" id="care-sections-container">
+          <!-- Rendered dynamically by app.js: Feeding, Grooming, Vaccinations, Vet Visits, Medications, Care Notes -->
+        </div>
+
+        <!-- Medical History Section (All entries visibly labeled) -->
+        <div class="section-heading-row" style="margin-top: 24px;">
+          <h2 class="section-title">Sample Medical History</h2>
+          <span class="neutral-note">Demonstration entries</span>
+        </div>
+
+        <div class="medical-history-list" id="profile-history-list">
+          <!-- Rendered dynamically by app.js -->
+        </div>
+      </section>
+
+      <!-- ============================================== -->
+      <!-- SCREEN 3: HEALTH RECORDS                       -->
+      <!-- ============================================== -->
+      <section id="screen-records" class="screen-view" aria-labelledby="records-title">
+        <div class="screen-header">
+          <div>
+            <span class="sub-greeting">Historical Data</span>
+            <h1 id="records-title" class="screen-title">Health Records</h1>
+          </div>
+          <span class="fictional-header-tag">Simulated Data</span>
+        </div>
+
+        <!-- Sample Health Readings -->
+        <div class="section-heading-row">
+          <h2 class="section-title">Sample Health Readings</h2>
+          <span class="neutral-note">Strictly simulated</span>
+        </div>
+
+        <div class="readings-container" id="records-readings-list">
+          <!-- Reading 1 -->
+          <article class="card reading-card">
+            <div class="reading-meta">
+              <span class="reading-date">Nov 18, 2026</span>
+              <span class="reading-badge-demo">Simulated Demo Value</span>
+            </div>
+            <div class="reading-main">
+              <div class="reading-name-wrap">
+                <span class="reading-icon">❤️</span>
+                <span class="reading-name">Resting Heart Rate</span>
+              </div>
+              <div class="reading-value" id="rec-hr">120 bpm</div>
+            </div>
+          </article>
+
+          <!-- Reading 2 -->
+          <article class="card reading-card">
+            <div class="reading-meta">
+              <span class="reading-date">Nov 12, 2026</span>
+              <span class="reading-badge-demo">Simulated Demo Value</span>
+            </div>
+            <div class="reading-main">
+              <div class="reading-name-wrap">
+                <span class="reading-icon">⚖️</span>
+                <span class="reading-name">Body Weight</span>
+              </div>
+              <div class="reading-value" id="rec-weight">4.2 kg</div>
+            </div>
+          </article>
+
+          <!-- Reading 3 -->
+          <article class="card reading-card">
+            <div class="reading-meta">
+              <span class="reading-date">Oct 28, 2026</span>
+              <span class="reading-badge-demo">Simulated Demo Value</span>
+            </div>
+            <div class="reading-main">
+              <div class="reading-name-wrap">
+                <span class="reading-icon">⚡</span>
+                <span class="reading-name">Recorded Play Activity</span>
+              </div>
+              <div class="reading-value">45 mins</div>
+            </div>
+          </article>
+
+          <!-- Reading 4 -->
+          <article class="card reading-card">
+            <div class="reading-meta">
+              <span class="reading-date">Oct 14, 2026</span>
+              <span class="reading-badge-demo">Simulated Demo Value</span>
+            </div>
+            <div class="reading-main">
+              <div class="reading-name-wrap">
+                <span class="reading-icon">🌡️</span>
+                <span class="reading-name">Temperature Reading</span>
+              </div>
+              <div class="reading-value">38.4 °C</div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Health Observations History -->
+        <div class="section-heading-row" style="margin-top: 24px;">
+          <h2 class="section-title">Health Observations History</h2>
+          <span class="neutral-note">Demonstration logs</span>
+        </div>
+
+        <div class="observations-list" id="records-observations-list">
+          <!-- Rendered dynamically by app.js -->
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Persistent Bottom Navigation Bar -->
+    <nav class="bottom-nav-bar" aria-label="Main Navigation">
+      <button type="button" class="nav-item active" id="nav-btn-home" data-target="screen-home" aria-selected="true">
+        <span class="nav-icon" aria-hidden="true">🏠</span>
+        <span class="nav-label">Home</span>
+      </button>
+
+      <button type="button" class="nav-item" id="nav-btn-profile" data-target="screen-profile" aria-selected="false">
+        <span class="nav-icon" aria-hidden="true">🐾</span>
+        <span class="nav-label">Pet Profile</span>
+      </button>
+
+      <button type="button" class="nav-item" id="nav-btn-records" data-target="screen-records" aria-selected="false">
+        <span class="nav-icon" aria-hidden="true">📋</span>
+        <span class="nav-label">Health Records</span>
+      </button>
+    </nav>
+
+    <!-- ============================================== -->
+    <!-- MODAL 1: REMINDER DETAIL VIEW                  -->
+    <!-- ============================================== -->
+    <div class="modal-overlay" id="modal-reminder-detail" role="dialog" aria-modal="true" aria-labelledby="modal-rem-title" hidden>
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-header-badge-row">
+            <span class="badge-source" id="modal-rem-source-badge">Sample Demo</span>
+            <span class="status-pill" id="modal-rem-status-pill">Upcoming</span>
+          </div>
+          <button type="button" class="btn-close-modal" id="btn-close-rem-detail" aria-label="Close dialog">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="modal-hero-icon-wrap">
+            <span class="modal-hero-icon" id="modal-rem-icon">🩺</span>
+          </div>
+          <h3 class="modal-title" id="modal-rem-title">Reminder Title</h3>
+          
+          <div class="modal-detail-row">
+            <span class="detail-label">Scheduled Date:</span>
+            <span class="detail-value" id="modal-rem-date">Next Month</span>
+          </div>
+
+          <div class="modal-detail-block">
+            <span class="detail-label">Description & Instructions:</span>
+            <p class="modal-description" id="modal-rem-desc">Description text...</p>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-action-complete" id="btn-toggle-rem-status">
+            <span id="btn-toggle-rem-status-text">Mark as Completed</span>
+          </button>
+          <div class="modal-footer-secondary">
+            <button type="button" class="btn btn-action-edit" id="btn-edit-reminder">Edit</button>
+            <button type="button" class="btn btn-action-delete" id="btn-delete-reminder">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL 2: ADD / EDIT REMINDER FORM              -->
+    <!-- ============================================== -->
+    <div class="modal-overlay" id="modal-reminder-form" role="dialog" aria-modal="true" aria-labelledby="modal-rem-form-title" hidden>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title-sm" id="modal-rem-form-title">Add Reminder</h3>
+          <button type="button" class="btn-close-modal" id="btn-close-rem-form" aria-label="Close dialog">✕</button>
+        </div>
+
+        <form id="form-reminder" class="modal-form">
+          <input type="hidden" id="rem-form-id">
+
+          <div class="form-group">
+            <label for="rem-form-title" class="form-label">Reminder Name / Title *</label>
+            <input type="text" id="rem-form-title" class="form-input" placeholder="e.g. Routine Dental Checkup" required>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label for="rem-form-date" class="form-label">Date / Schedule *</label>
+              <input type="text" id="rem-form-date" class="form-input" placeholder="e.g. Dec 15, 2026 or Next Friday" required>
+            </div>
+            <div class="form-group">
+              <label for="rem-form-category" class="form-label">Category Icon</label>
+              <select id="rem-form-category" class="form-select">
+                <option value="vet">🩺 Vet Visit</option>
+                <option value="grooming">🛁 Grooming</option>
+                <option value="brush">✂️ Hygiene</option>
+                <option value="med">💊 Medication</option>
+                <option value="nutrition">🥣 Feeding / Diet</option>
+                <option value="general">🐾 General Care</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="rem-form-desc" class="form-label">Description & Notes</label>
+            <textarea id="rem-form-desc" class="form-textarea" rows="3" placeholder="Add specific preparation notes or instructions..."></textarea>
+          </div>
+
+          <div class="modal-footer" style="padding: 0; margin-top: 8px;">
+            <button type="submit" class="btn btn-primary" id="btn-submit-rem-form">Save Reminder</button>
+            <button type="button" class="btn btn-tertiary" id="btn-cancel-rem-form">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL 3: ADD / EDIT PET CARE ENTRY FORM        -->
+    <!-- ============================================== -->
+    <div class="modal-overlay" id="modal-care-form" role="dialog" aria-modal="true" aria-labelledby="modal-care-form-title" hidden>
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <span class="sub-greeting" id="care-form-category-label">Section</span>
+            <h3 class="modal-title-sm" id="modal-care-form-title">Add Care Entry</h3>
+          </div>
+          <button type="button" class="btn-close-modal" id="btn-close-care-form" aria-label="Close dialog">✕</button>
+        </div>
+
+        <form id="form-care-entry" class="modal-form">
+          <input type="hidden" id="care-form-section-key">
+          <input type="hidden" id="care-form-item-id">
+
+          <div class="form-group">
+            <label for="care-form-title" class="form-label">Entry Title *</label>
+            <input type="text" id="care-form-title" class="form-input" placeholder="e.g. Daily Kibble Portion or Booster Record" required>
+          </div>
+
+          <div class="form-group">
+            <label for="care-form-details" class="form-label">Details / Instructions *</label>
+            <textarea id="care-form-details" class="form-textarea" rows="3" placeholder="Provide schedule, dosage, routine details, or observations..." required></textarea>
+          </div>
+
+          <div class="modal-footer" style="padding: 0; margin-top: 8px;">
+            <button type="submit" class="btn btn-primary">Save Care Information</button>
+            <button type="button" class="btn btn-tertiary" id="btn-cancel-care-form">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
